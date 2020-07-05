@@ -200,7 +200,7 @@ def xact_category(xact):
     if len(category) > 1:
         for c in category[1:]:
             if len(c) > 0:
-                cname += "::" + c
+                cname += ":" + c
     return cname
 
 
@@ -237,7 +237,7 @@ def ledger_converter(
             config = configs[xact["account_id"]]
 
         if "name" not in config:
-            config["name"] = "Asset::Unknown"
+            config["name"] = "Assets:Unknown"
         if "negate" not in config:
             config["negate"] = args.negate
         if "currency" not in config:
@@ -294,6 +294,7 @@ def fetch_fn(args):
     end = args.end.isoformat()
 
     token = credentials["banks"][args.bank]
+    account_list = None
 
     if not args.all:
         account_list = []
@@ -316,7 +317,11 @@ def fetch_fn(args):
 
     while len(transactions) < response["total_transactions"]:
         response = client.Transactions.get(
-            token, start_date=start, end_date=end, offset=len(transactions)
+            token,
+            start_date=start,
+            end_date=end,
+            offset=len(transactions),
+            account_ids=account_list,
         )
         transactions.extend(response["transactions"])
 
