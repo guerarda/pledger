@@ -1,9 +1,12 @@
 import csv
 import json
-import os
 import logging
 
+from pathlib import Path
+
 from plaid import Client
+
+CONFIG_FOLDER = ".pledger"
 
 
 def init_client(credentials):
@@ -22,8 +25,12 @@ def init_client(credentials):
     return client
 
 
+def config_file_path(filename):
+    return Path.cwd() / CONFIG_FOLDER / (filename + ".json")
+
+
 def load_config_file(filename):
-    path = os.getcwd() + "/.pledger/" + filename + ".json"
+    path = config_file_path(filename)
 
     with open(path) as cfile:
         logging.debug("Loading config file '%s' from %s", filename, path)
@@ -51,7 +58,7 @@ def get_plaid_hierarchies(fetch=True):
        if fetch is set, get them from Plaid"""
 
     try:
-        f = load_config_file(".plaid-hierarchies")
+        f = load_config_file("plaid-hierarchies")
         return f
     except:
         if fetch:
@@ -65,7 +72,8 @@ def get_plaid_hierarchies(fetch=True):
                 }
 
             # Write to file since it was not present
-            path = os.getcwd() + "/.pledger/.plaid-hierarchies.json"
+
+            path = config_file_path("plaid-hierarchies")
             with open(path, "w") as cfile:
                 logging.debug("Creating default categories file at %s", path)
                 json.dump(f, cfile, sort_keys=True, indent=4)
