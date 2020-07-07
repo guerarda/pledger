@@ -28,6 +28,22 @@ def main():
         help="File to wite the transaction data to. Default to stdout.",
     )
 
+    # Parser for the init command
+    initp = subs.add_parser(
+        "init",
+        description="init the current directory, populating the pledger config files.",
+        parents=[commonp],
+    )
+    initp.add_argument(
+        "--force",
+        "-f",
+        nargs="?",
+        default=False,
+        const=True,
+        help="If set, will overwrite the config files if some already exists",
+    )
+    initp.set_defaults(func=xact.init_fn)
+
     # Parser for the fetch command
     fetchp = subs.add_parser(
         "fetch",

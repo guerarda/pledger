@@ -38,11 +38,6 @@ def load_config_file(filename):
     return None
 
 
-def get_credentials():
-    """Loads the credentials into a json object."""
-    return load_config_file("credentials")
-
-
 def get_accounts():
     """Loads the account config file."""
     return load_config_file("accounts")
@@ -51,6 +46,16 @@ def get_accounts():
 def get_categories():
     """Loads the categories override file"""
     return load_config_file("categories")
+
+
+def get_credentials():
+    """Loads the credentials into a json object."""
+    return load_config_file("credentials")
+
+
+def get_payees():
+    """Loads the payees override file"""
+    return load_config_file("payees")
 
 
 def get_plaid_hierarchies(fetch=True):
@@ -78,11 +83,6 @@ def get_plaid_hierarchies(fetch=True):
                 logging.debug("Creating default categories file at %s", path)
                 json.dump(f, cfile, sort_keys=True, indent=4)
         return f
-
-
-def get_payees():
-    """Loads the payees override file"""
-    return load_config_file("payees")
 
 
 def account_configs(config):
@@ -256,6 +256,65 @@ def ledger_converter(
         output.write(tid)
         output.write(cat)
         output.write(acc)
+
+
+def init_fn(args):
+    """Creates and initialize the config files"""
+
+    cf = Path.cwd() / CONFIG_FOLDER
+
+    logging.debug("Initializing folder at %s", cf)
+
+    if cf.exists():
+        if not args.force:
+            logging.info("Config folder already present. Use --force to overwrite.")
+            return
+
+        logging.debug("Folder already exists. Overwriting.")
+        for file in cf.iterdir():
+            file.unlink()
+        cf.rmdir()
+
+    cf.mkdir()
+
+    # Credentials
+    with (config_file_path("credentials")).open("w") as f:
+        logging.debug("Creating credentials.json")
+        d = {
+            "client_id": "",
+            "public_key": "",
+            "secret": "",
+            "mybank": {"checking": "", "savings": ""},
+        }
+        json.dump(d, f, indent=4)
+
+    # Accounts
+    with (config_file_path("accounts")).open("w") as f:
+        logging.debug("Creating accounts.json")
+        d = {
+            "mybank": {
+                "checkings": "plaid account_id for checking account at mybank",
+                "savings": "plaid account_id for savings account at mybank",
+            }
+        }
+        json.dump(d, f, indent=4)
+
+    # Categories
+    with (config_file_path("categories")).open("w") as f:
+        logging.debug("Creating categories.json")
+        d = {"21009000": "Income:Payroll"}
+        json.dump(d, f, indent=4)
+
+    # Payees
+    with (config_file_path("payees")).open("w") as f:
+        logging.debug("Creating payees.json")
+        d = {
+            "SP * FRENCH BAKERY 167941": {
+                "name": "Tasty French Bakery",
+                "category_id": "13005053",
+            }
+        }
+        json.dump(d, f, indent=4)
 
 
 def convert_fn(args):
